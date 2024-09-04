@@ -43,39 +43,29 @@
             }
             
             try {
-                const response = await fetch(`https://api-cybernest.vercel.app/spotify-downloader?url=${encodeURIComponent(url)}`);
+                const response = await fetch(`https://api-cybernest.vercel.app/spotify-downloader?url=${encodeURIComponent(url)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
                 
                 if (response.ok) {
                     const data = await response.json();
-                    
                     if (data.preview) {
-                        const preview = data.preview;
                         resultDiv.innerHTML = `
                             <div class="p-4 bg-gray-200 rounded-lg shadow-md">
-                                <h2 class="text-xl font-semibold text-gray-800">${preview.type === 'playlist' ? 'Playlist Details' : 'Song Details'}</h2>
-                                <p class="text-gray-700"><strong>Title:</strong> ${preview.title}</p>
-                                <p class="text-gray-700"><strong>Description:</strong> ${preview.description}</p>
-                                <p class="text-gray-700"><strong>Artist:</strong> ${preview.artist}</p>
-                                <p class="text-gray-700"><strong>Link:</strong> <a href="${preview.link}" class="text-blue-500" target="_blank">${preview.link}</a></p>
-                                <img src="${preview.image}" alt="${preview.title} cover" class="w-32 h-32 mt-2 rounded-md shadow-sm">
-                                <audio controls class="mt-4 w-full">
-                                    <source src="${preview.audio}" type="audio/mpeg">
+                                <h2 class="text-xl font-semibold text-gray-800">${data.preview.type.charAt(0).toUpperCase() + data.preview.type.slice(1)} Details</h2>
+                                <p class="text-gray-700"><strong>Title:</strong> ${data.preview.title}</p>
+                                <p class="text-gray-700"><strong>Track:</strong> ${data.preview.track}</p>
+                                <p class="text-gray-700"><strong>Artist:</strong> ${data.preview.artist}</p>
+                                <p class="text-gray-700"><strong>Description:</strong> ${data.preview.description}</p>
+                                <p class="text-gray-700"><strong>Link:</strong> <a href="${data.preview.link}" class="text-blue-500 underline" target="_blank">Open Spotify</a></p>
+                                <img src="${data.preview.image}" alt="${data.preview.title} cover" class="w-32 h-32 mt-2 rounded-md shadow-sm">
+                                <audio controls class="w-full mt-4">
+                                    <source src="${data.preview.audio}" type="audio/mpeg">
                                     Your browser does not support the audio element.
                                 </audio>
-                            </div>
-                            <div class="mt-4">
-                                <h3 class="text-lg font-semibold text-gray-800">Track List</h3>
-                                ${data.tracks.map(track => `
-                                    <div class="p-2 bg-white rounded-md shadow-sm mt-2">
-                                        <p class="text-gray-700"><strong>Track:</strong> ${track.name}</p>
-                                        <p class="text-gray-700"><strong>Artist:</strong> ${track.artist}</p>
-                                        <p class="text-gray-700"><strong>Duration:</strong> ${track.time}</p>
-                                        <audio controls class="w-full mt-2">
-                                            <source src="${track.previewUrl}" type="audio/mpeg">
-                                            Your browser does not support the audio element.
-                                        </audio>
-                                    </div>
-                                `).join('')}
                             </div>
                         `;
                     } else {
