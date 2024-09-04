@@ -3,63 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Downloader</title>
-    <!-- Tailwind CSS -->
+    <title>Spotify URL Details</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.2/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-900 font-sans">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-4 text-center text-indigo-600">Spotify Playlist Downloader</h1>
-        
-        <form id="spotify-form" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
-            <div class="mb-4">
-                <label for="spotify-url" class="block text-sm font-medium text-gray-700">Spotify Playlist URL</label>
-                <input type="text" id="spotify-url" name="spotify-url" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter Spotify Playlist URL">
-            </div>
-            <button type="submit" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Fetch Playlist</button>
-        </form>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-        <div id="playlist-info" class="hidden mt-8 max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold mb-2 text-indigo-600" id="playlist-title"></h2>
-            <p id="playlist-description" class="mb-4 text-gray-700"></p>
-            <a id="playlist-link" href="#" class="text-indigo-600 hover:text-indigo-700" target="_blank"></a>
-            <img id="playlist-image" class="w-full h-auto mt-4 rounded-lg shadow-sm" src="" alt="Playlist Image">
-            <audio id="playlist-preview" class="w-full mt-4" controls></audio>
+    <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold mb-4 text-gray-800 flex items-center">
+            <i class="fas fa-music mr-2 text-blue-500"></i> Spotify URL Details
+        </h1>
+        <form id="spotify-form">
+            <div class="mb-4">
+                <label for="url" class="block text-gray-600 mb-2 text-sm font-medium">Spotify URL</label>
+                <input type="text" id="url" name="url" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900" placeholder="Enter Spotify URL">
+            </div>
+            <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out">Get Details</button>
+        </form>
+        <div id="result" class="mt-6">
+            <!-- Results will be displayed here -->
         </div>
     </div>
 
     <script>
-        document.getElementById('spotify-form').addEventListener('submit', async (event) => {
+        document.getElementById('spotify-form').addEventListener('submit', async function(event) {
             event.preventDefault();
-
-            const url = document.getElementById('spotify-url').value;
-            const apiUrl = `https://api-cybernest.vercel.app/spotify-downloader?url=${encodeURIComponent(url)}`;
-
+            const url = document.getElementById('url').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!url) {
+                resultDiv.innerHTML = '<p class="text-red-500">Please enter a valid Spotify URL.</p>';
+                return;
+            }
+            
             try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-
+                const response = await fetch(`https://api-cybernest.vercel.app/spotify-downloader?url=${encodeURIComponent(url)}`);
+                
                 if (response.ok) {
-                    const { preview, tracks } = data;
-
-                    document.getElementById('playlist-title').textContent = preview.title;
-                    document.getElementById('playlist-description').textContent = preview.description;
-                    document.getElementById('playlist-link').href = preview.link;
-                    document.getElementById('playlist-link').textContent = 'View on Spotify';
-                    document.getElementById('playlist-image').src = preview.image;
-                    document.getElementById('playlist-preview').src = preview.audio;
-
-                    // Show playlist info section
-                    document.getElementById('playlist-info').classList.remove('hidden');
+                    const data = await response.json();
+                    
+                    if (data.preview) {
+                        const preview = data.preview;
+                        resultDiv.innerHTML = `
+                            <div class="p-4 bg-gray-200 rounded-lg shadow-md">
+                                <h2 class="text-xl font-semibold text-gray-800">${preview.type === 'playlist' ? 'Playlist Details' : 'Song Details'}</h2>
+                                <p class="text-gray-700"><strong>Title:</strong> ${preview.title}</p>
+                                <p class="text-gray-700"><strong>Description:</strong> ${preview.description}</p>
+                                <p class="text-gray-700"><strong>Artist:</strong> ${preview.artist}</p>
+                                <p class="text-gray-700"><strong>Link:</strong> <a href="${preview.link}" class="text-blue-500" target="_blank">${preview.link}</a></p>
+                                <img src="${preview.image}" alt="${preview.title} cover" class="w-32 h-32 mt-2 rounded-md shadow-sm">
+                                <audio controls class="mt-4 w-full">
+                                    <source src="${preview.audio}" type="audio/mpeg">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            </div>
+                            <div class="mt-4">
+                                <h3 class="text-lg font-semibold text-gray-800">Track List</h3>
+                                ${data.tracks.map(track => `
+                                    <div class="p-2 bg-white rounded-md shadow-sm mt-2">
+                                        <p class="text-gray-700"><strong>Track:</strong> ${track.name}</p>
+                                        <p class="text-gray-700"><strong>Artist:</strong> ${track.artist}</p>
+                                        <p class="text-gray-700"><strong>Duration:</strong> ${track.time}</p>
+                                        <audio controls class="w-full mt-2">
+                                            <source src="${track.previewUrl}" type="audio/mpeg">
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = '<p class="text-red-500">No details found for the provided URL.</p>';
+                    }
                 } else {
-                    throw new Error(data.error || 'Failed to fetch playlist information.');
+                    resultDiv.innerHTML = '<p class="text-red-500">Failed to fetch details. Please try again later.</p>';
                 }
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                resultDiv.innerHTML = '<p class="text-red-500">An error occurred. Please try again.</p>';
             }
         });
     </script>
+
 </body>
 </html>
