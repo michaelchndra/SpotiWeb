@@ -3,78 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify URL Details</title>
+    <title>Spotify Downloader</title>
+    <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.2/js/all.min.js"></script>
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-        }
-    </style>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-
-    <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
-        <h1 class="text-3xl font-bold mb-4 text-gray-800 flex items-center">
-            <i class="fas fa-music mr-2 text-blue-500"></i> Spotify URL Details
-        </h1>
-        <form id="spotify-form">
+<body class="bg-gray-100 text-gray-900 font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-4 text-center">Spotify Playlist Downloader</h1>
+        
+        <form id="spotify-form" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
             <div class="mb-4">
-                <label for="url" class="block text-gray-600 mb-2 text-sm font-medium">Spotify URL</label>
-                <input type="text" id="url" name="url" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900" placeholder="Enter Spotify URL">
+                <label for="spotify-url" class="block text-sm font-medium text-gray-700">Spotify Playlist URL</label>
+                <input type="text" id="spotify-url" name="spotify-url" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter Spotify Playlist URL">
             </div>
-            <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out">Get Details</button>
+            <button type="submit" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Fetch Playlist</button>
         </form>
-        <div id="result" class="mt-6">
-            <!-- Results will be displayed here -->
+
+        <div id="playlist-info" class="hidden mt-8 max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold mb-2" id="playlist-title"></h2>
+            <p id="playlist-description" class="mb-4 text-gray-700"></p>
+            <a id="playlist-link" href="#" class="text-indigo-600 hover:text-indigo-700" target="_blank"></a>
+            <img id="playlist-image" class="w-full h-auto mt-4 rounded-lg shadow-sm" src="" alt="Playlist Image">
+            <audio id="playlist-preview" class="w-full mt-4" controls></audio>
         </div>
     </div>
 
     <script>
-        document.getElementById('spotify-form').addEventListener('submit', async function(event) {
+        document.getElementById('spotify-form').addEventListener('submit', async (event) => {
             event.preventDefault();
-            const url = document.getElementById('url').value;
-            const resultDiv = document.getElementById('result');
-            
-            if (!url) {
-                resultDiv.innerHTML = '<p class="text-red-500">Please enter a valid Spotify URL.</p>';
-                return;
-            }
-            
+
+            const url = document.getElementById('spotify-url').value;
+            const apiUrl = `https://api-cybernest.vercel.app/spotify-downloader?url=${encodeURIComponent(url)}`;
+
             try {
-                const response = await fetch('/getSpotifyDetails', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ url: url })
-                });
-                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
                 if (response.ok) {
-                    const data = await response.json();
-                    if (data.error) {
-                        resultDiv.innerHTML = `<p class="text-red-500">${data.error}</p>`;
-                    } else {
-                        resultDiv.innerHTML = `
-                            <div class="p-4 bg-gray-200 rounded-lg shadow-md">
-                                <h2 class="text-xl font-semibold text-gray-800">Song Details</h2>
-                                <p class="text-gray-700"><strong>Title:</strong> ${data.title}</p>
-                                <p class="text-gray-700"><strong>Artist:</strong> ${data.artist}</p>
-                                <p class="text-gray-700"><strong>Album:</strong> ${data.album}</p>
-                                <p class="text-gray-700"><strong>Release Date:</strong> ${data.release_date}</p>
-                                <img src="${data.cover_image}" alt="${data.title} cover" class="w-32 h-32 mt-2 rounded-md shadow-sm">
-                            </div>
-                        `;
-                    }
+                    const { preview, tracks } = data;
+
+                    document.getElementById('playlist-title').textContent = preview.title;
+                    document.getElementById('playlist-description').textContent = preview.description;
+                    document.getElementById('playlist-link').href = preview.link;
+                    document.getElementById('playlist-link').textContent = 'View on Spotify';
+                    document.getElementById('playlist-image').src = preview.image;
+                    document.getElementById('playlist-preview').src = preview.audio;
+
+                    // Show playlist info section
+                    document.getElementById('playlist-info').classList.remove('hidden');
                 } else {
-                    resultDiv.innerHTML = '<p class="text-red-500">Failed to fetch details. Please try again later.</p>';
+                    throw new Error(data.error || 'Failed to fetch playlist information.');
                 }
             } catch (error) {
-                resultDiv.innerHTML = '<p class="text-red-500">An error occurred. Please try again.</p>';
+                alert(`Error: ${error.message}`);
             }
         });
     </script>
-
 </body>
 </html>
