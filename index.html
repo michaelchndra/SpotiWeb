@@ -55,6 +55,7 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    
                     if (data.preview) {
                         resultDiv.innerHTML = `
                             <div class="p-4 bg-gray-200 rounded-lg shadow-md">
@@ -80,11 +81,11 @@
                 } else {
                     const errorData = await response.json();
                     console.error('Error response:', errorData);
-                    resultDiv.innerHTML = '<p class="text-red-500">Failed to fetch details. Please try again later.</p>';
+                    resultDiv.innerHTML = `<p class="text-red-500">Failed to fetch details: ${errorData.message || 'Unknown error'}. Please try again later.</p>`;
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
-                resultDiv.innerHTML = '<p class="text-red-500">An error occurred. Please try again.</p>';
+                resultDiv.innerHTML = '<p class="text-red-500">An error occurred. Please check your console for more details.</p>';
             }
         });
     </script>
