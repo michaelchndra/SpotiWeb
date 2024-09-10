@@ -50,6 +50,9 @@
                     }
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers]);
+                
                 if (response.ok) {
                     const data = await response.json();
                     if (data.preview) {
@@ -66,15 +69,21 @@
                                     <source src="${data.preview.audio}" type="audio/mpeg">
                                     Your browser does not support the audio element.
                                 </audio>
+                                <a href="${data.preview.audio}" download="${data.preview.title}.mp3" class="mt-4 inline-block bg-green-500 text-white p-2 rounded-md shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-200 ease-in-out">
+                                    <i class="fas fa-download mr-2"></i> Download Audio
+                                </a>
                             </div>
                         `;
                     } else {
                         resultDiv.innerHTML = '<p class="text-red-500">No details found for the provided URL.</p>';
                     }
                 } else {
+                    const errorData = await response.json();
+                    console.error('Error response:', errorData);
                     resultDiv.innerHTML = '<p class="text-red-500">Failed to fetch details. Please try again later.</p>';
                 }
             } catch (error) {
+                console.error('Fetch error:', error);
                 resultDiv.innerHTML = '<p class="text-red-500">An error occurred. Please try again.</p>';
             }
         });
